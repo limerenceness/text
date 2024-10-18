@@ -1,0 +1,63 @@
+习题1
+import requests
+from bs4 import BeautifulSoup
+import csv
+
+def get_data_and_save_as_csv():
+    url = "https://iftp.chinamoney.com.cn/english/bdInfo/"
+    # 发送请求获取页面内容
+    response = requests.get(url)
+    if response.status_code == 200:
+        soup = BeautifulSoup(response.text, 'html.parser')
+        # 找到表格
+        table = soup.find('table')
+        if table:
+            # 存储数据的列表
+            data_list = []
+            # 遍历表格行
+            for row in table.find_all('tr'):
+                row_data = []
+                cells = row.find_all('td')
+                if cells:
+                    # 判断条件是否满足
+                    if cells[3].text == 'Treasury Bond' and cells[4].text == '2023':
+                        # 获取对应列的数据
+                        row_data.append(cells[0].text)
+                        row_data.append(cells[1].text)
+                        row_data.append(cells[2].text)
+                        row_data.append(cells[3].text)
+                        row_data.append(cells[4].text)
+                        row_data.append(cells[5].text)
+                        data_list.append(row_data)
+            # 将数据保存为 CSV 文件
+            with open('bond_data.csv', 'w', newline='', encoding='utf-8') as csvfile:
+                csv_writer = csv.writer(csvfile)
+                # 写入列名
+                csv_writer.writerow(['ISIN', 'Bond Code', 'Issuer', 'Bond Type', 'Issue Date', 'Latest Rating'])
+                # 写入数据
+                csv_writer.writerows(data_list)
+    else:
+        print(f"Failed to fetch data. Status code: {response.status_code}")
+
+get_data_and_save_as_csv()
+
+习题2
+import re
+
+def reg_search(text, regex_list):
+    result = {}
+    for key, regex_rules in regex_list.items():
+        value = None
+        for regex_rule in regex_rules:
+            # 根据正则表达式进行匹配
+            matches = re.findall(regex_rule, text)
+            if matches:
+                # 根据不同的键进行不同的处理
+                if key == '标的证券':
+                    value = matches[0]
+                    break
+                elif key == '换股期限':
+                    value = [m for match in matches for m in re.findall(r'\d{4}-\d{2}-\d{2}', match)]
+                    break
+        result[key] = value
+    return result
