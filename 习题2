@@ -1,0 +1,29 @@
+import re
+
+def reg_search(text, regex_list):
+    result = {}
+    # 遍历每个需要匹配的项目及其对应的正则表达式列表
+    for key, regex_rules in regex_list.items():
+        value = None
+        # 尝试每个正则表达式规则
+        for regex_rule in regex_rules:
+            # 使用当前正则表达式在文本中查找所有匹配项
+            matches = re.findall(regex_rule, text)
+            if matches:
+                # 如果是标的证券，进行特定处理
+                if key == '标的证券':
+                    # 取第一个匹配项，如果有多个匹配项的话
+                    value = matches[0] if len(matches) > 0 else None
+                    # 如果匹配项中包含'.'，提取股票代码部分（去掉'.SH'之类的后缀）
+                    if value is not None and '.' in value:
+                        value = value.split('.')[0]
+                # 如果是换股期限，进行特定处理
+                elif key == '换股期限':
+                    # 查找换股开始日期
+                    start_date_match = re.search(r'(\d{4}-\d{2}-\d{2})', matches[0]) if len(matches) > 0 else None
+                    # 查找换股结束日期
+                    end_date_match = re.search(r'至 (\d{4}-\d{2}-\d{2})', matches[0]) if len(matches) > 0 else None
+                    value = [start_date_match.group(1) if start_date_match else None, end_date_match.group(1) if end_date_match else None]
+                break
+        result[key] = value
+    return result
