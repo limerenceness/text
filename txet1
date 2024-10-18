@@ -1,0 +1,23 @@
+import pandas as pd
+import requests
+
+# 定义链接
+url = "https://example.com/data_page"
+
+# 发送请求获取页面内容
+response = requests.get(url)
+
+# 假设页面返回的是 HTML 表格数据，可以使用 pandas 的 read_html 函数来解析
+tables = pd.read_html(response.text)
+
+# 假设第一个表格是我们需要的
+data_df = tables[0]
+
+# 筛选条件
+filtered_df = data_df[(data_df['Bond Type'] == 'Treasury Bond') & (data_df['Issue Year'] == 2023)]
+
+# 选择需要的列
+result_df = filtered_df[['ISIN', 'Bond Code', 'Issuer', 'Bond Type', 'Issue Date', 'Latest Rating']]
+
+# 保存为 CSV 文件
+result_df.to_csv('filtered_bond_data.csv', index=False)
